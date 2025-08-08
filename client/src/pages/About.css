@@ -1,0 +1,99 @@
+/* About.css */
+.about-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.about-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.about-text {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.about-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.about-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.about-container {
+  flex: 1;
+  padding: 40px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.about-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.about-intro {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.tech-section {
+  margin-top: 40px;
+}
+
+.tech-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.tech-block.left .tech-text {
+  order: 1;
+}
+.tech-block.left .tech-image {
+  order: 2;
+}
+
+.tech-block.right .tech-image {
+  order: 1;
+}
+.tech-block.right .tech-text {
+  order: 2;
+}
+
+.tech-text {
+  flex: 1;
+  min-width: 280px;
+}
+
+.tech-image {
+  width: 150px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.tech-image.large {
+  width: 375px;
+}
+
+
+.about-credit {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 40px;
+}

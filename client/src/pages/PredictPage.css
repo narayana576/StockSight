@@ -1,0 +1,12 @@
+/* src/styles/PredictPage.css */
+.predict-page {
+  padding: 40px;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+}
+
+.predict-page h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
