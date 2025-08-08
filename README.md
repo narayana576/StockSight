@@ -105,16 +105,16 @@ After generating predictions, Export to CSV and Export to PDF buttons will appea
 ![Home Page](./Screenshots/Home-page.png)
 
 ### About Page
-![About Page](./About-page.png)
+![About Page](./Screenshots/About-page.png)
 
 ### Contact Page
-![Contact Page](./Contact-page.png)
+![Contact Page](./Screenshots/Contact-page.png)
 
 ### Prediction Page
-![Prediction Page](./Prediction-page.png)
+![Prediction Page](./Screenshots/Prediction-page.png)
 
 ### Login Page
-![Login Page](./Login-page.png)
+![Login Page](./Screenshots/Login-page.png)
 
 ### Signup Page
-![Signup Page](./Signup-page.png)
+![Signup Page](./Screenshots/Signup-page.png)
