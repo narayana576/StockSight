@@ -102,7 +102,7 @@ After generating predictions, Export to CSV and Export to PDF buttons will appea
 ## 🖼 Screenshots
 
 ### Home Page
-![Home Page](./Home-page.png)
+![Home Page](./Screenshots/Home-page.png)
 
 ### About Page
 ![About Page](./About-page.png)
