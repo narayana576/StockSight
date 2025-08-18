@@ -23,13 +23,16 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+
+
 # === MongoDB Configuration ===
-client = MongoClient(os.getenv("MONGO_URI"))
+mongo_uri = os.environ.get("MONGO_URI")
+client = MongoClient(mongo_uri)
 db = client["stock_forecast_db"]
 users_collection = db["users"]
 
 # === API Key ===
-TIINGO_API_KEY = os.getenv("TIINGO_API_KEY")
+TIINGO_API_KEY = os.environ.get("TIINGO_API_KEY")
 
 
 
