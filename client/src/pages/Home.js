@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { predictStock } from '../services/api';
 import { ClipLoader } from 'react-spinners';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import './Home.css';
 
 function Home() {
@@ -65,10 +67,29 @@ function Home() {
     a.click();
     URL.revokeObjectURL(url);
   };
+const exportPDF = () => {
 
-  const exportPDF = () => {
-    
-  };
+  if (forecastList.length === 0) return;
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text(`StockSight Forecast - ${company}`, 14, 20);
+
+  const tableData = forecastList.map((price, index) => [
+    `Day ${index + 1}`,
+    forecastDates[index],
+    `₹${price.toFixed(2)}`
+  ]);
+
+  autoTable(doc, {
+    startY: 30,
+    head: [["Day", "Date", "Predicted Price"]],
+    body: tableData,
+  });
+
+  doc.save(`${company}_forecast.pdf`);
+};
 
   return (
     <div className="home-hero">
