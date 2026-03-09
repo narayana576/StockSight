@@ -175,8 +175,12 @@ Note: You must Sign up and log in to access the prediction feature.
 
 ![Signup Page](./Screenshots/Signup-page.png)
 
+
+
 AUTHOR:
 
 M.lakshminarayana
+
 Software Developer
+
 https://github.com/narayana56
