@@ -2,6 +2,42 @@
 
 ---
 
+## Project Structure
+
+```bash
+STOCKSIGHT
+|
+├── client
+|     └── public
+|     |     └── images
+|     |     └── index.html
+|     | 
+|     └── src
+|     |    └── App.css
+|     |    └── App.js
+|     |    └── App.test.js
+|     |    └── index.css
+|     |    └── index.js
+|     | 
+|     └── .env
+|     └── package-lock.json
+|     └── package.json
+|     └── README.md
+|
+├── Screenshots
+|
+├── server
+|     └── python_model
+|     |      └── static
+|     |      └── app.py
+|     |      └── requirements.txt
+|     └── .env
+|
+└── .gitignore
+└── README.md
+```
+---    
+
 ## 📚 Table of Contents
 - [About the Project](#about-the-project)
 - [Built With](#built-with)
@@ -55,66 +91,92 @@ It combines **live market data** from Yahoo Finance and the **Tiingo API** with 
 
 ---
 
+Clone the repository-
 
-Clone the repository
-git clone https://github.com/your-username/StockSight.git
-cd StockSight
+`git clone https://github.com/your-username/StockSight.git`
+`cd StockSight`
 
+Install dependencies-
 
+install python-3.11.x version: important 
 
-Install dependencies
+`python --version` should say 3.11.x 
+
 Backend:
-cd server/python_model
-pip install -r ../requirements.txt
+`cd server/python_model`
+`pip install -r requirements.txt`
 
 Frontend:
-cd ../../client
-npm install
+`cd client`
+`npm install`
 
-Set up environment variables
-Create a .env file inside server/python_model:
+Set up environment variables-
 
+create a .env file inside client/ :
+
+```bash
+REACT_APP_API_URL=http://localhost:5001
+```
+
+Create a .env file inside server/ :
+
+```bash
 MONGO_URI=your_mongodb_connection_string
 TIINGO_API_KEY=your_tiingo_api_key
-SECRET_KEY=your_flask_secret
+```
 
 Get your own keys:
+
 MongoDB Atlas: Sign up here → Create a cluster → Get connection string
+
 Tiingo API: Sign up here → Get API key
 
 
-Start the Backend
-cd server/python_model
-python app.py
+Start the Backend-
 
-Start the Frontend
-cd client
-npm start
+`cd server/python_model`
+`python app.py`
 
-Access in browser:
-http://localhost:3000
+Start the Frontend-
 
-Note:
-You must Sign up and log in to access the prediction feature.
-After generating predictions, Export to CSV and Export to PDF buttons will appear alongside the forecast table.
+`cd client`
+`npm start`
 
+Access in browser: http://localhost:3000
+
+Note: You must Sign up and log in to access the prediction feature.
+<br>After generating predictions, Export to CSV and Export to PDF buttons will appear alongside the forecast table.<br>
+
+---
 
 ## 🖼 Screenshots
 
 ### Home Page
+
 ![Home Page](./Screenshots/Home-page.png)
 
 ### About Page
+
 ![About Page](./Screenshots/About-page.png)
 
 ### Contact Page
+
 ![Contact Page](./Screenshots/Contact-page.png)
 
 ### Prediction Page
+
 ![Prediction Page](./Screenshots/Prediction-page.png)
 
 ### Login Page
+
 ![Login Page](./Screenshots/Login-page.png)
 
 ### Signup Page
+
 ![Signup Page](./Screenshots/Signup-page.png)
+
+AUTHOR:
+
+M.lakshminarayana
+Software Developer
+https://github.com/narayana56

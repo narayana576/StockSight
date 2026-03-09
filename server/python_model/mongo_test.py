@@ -1,7 +1,7 @@
 # from mongoengine import connect, Document, StringField
 
 # connect(
-#     host="mongodb+srv://mlnarayana576:XyPMIGcISoigRbUZ@luckycluster1.pbnhmyq.mongodb.net/StockSightDb1?retryWrites=true&w=majority"
+#     host="MONGO-ATLAS-CLUSTER_URL"
 # )
 
 # class User(Document):

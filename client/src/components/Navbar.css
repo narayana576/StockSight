@@ -62,7 +62,7 @@
 .dropdown-toggle {
   background: none;
   border: none;
-  color: white;
+  color: rgb(9, 135, 239);
   font-weight: 500;
   cursor: pointer;
 }
@@ -78,7 +78,7 @@
 .dropdown-item {
   display: block;
   padding: 0.5rem 1rem;
-  color: white;
+  color: rgb(26, 223, 12);
   text-decoration: none;
 }
 .dropdown-item:hover {

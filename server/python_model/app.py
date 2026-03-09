@@ -12,143 +12,214 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import datetime
-import pandas_datareader.data as web
+import requests
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
+# =========================
+# MongoDB Configuration
+# =========================
+mongo_uri = os.getenv("MONGO_URI")
+
+if mongo_uri:
+    client = MongoClient(mongo_uri)
+    db = client["stock_forecast_db"]
+    users_collection = db["users"]
+else:
+    users_collection = None
 
 
-# === MongoDB Configuration ===
-mongo_uri = os.environ.get("MONGO_URI")
-client = MongoClient(mongo_uri)
-db = client["stock_forecast_db"]
-users_collection = db["users"]
-
-# === API Key ===
-TIINGO_API_KEY = os.environ.get("TIINGO_API_KEY")
+# =========================
+# API Key
+# =========================
+TIINGO_API_KEY = os.getenv("TIINGO_API_KEY")
 
 
-
-
-
-# === Error Handlers ===
+# =========================
+# Error Handlers
+# =========================
 @app.errorhandler(404)
 def handle_404(e):
     return jsonify({"success": False, "message": "Not found"}), 404
+
 
 @app.errorhandler(405)
 def handle_405(e):
     return jsonify({"success": False, "message": "Method not allowed"}), 405
 
+
 @app.errorhandler(500)
 def handle_500(e):
-    return jsonify({"success": False, "message": "Internal server error"}), 500
+    return jsonify({"success": False, "message": str(e)}), 500
 
-# === Token Auth Middleware ===
+
+# =========================
+# Token Middleware
+# =========================
 def token_required(f):
+
     @wraps(f)
     def decorated(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
+
+        auth_header = request.headers.get("Authorization")
+
         token = None
+
         if auth_header:
             try:
                 token = auth_header.split(" ")[1]
-            except IndexError:
+            except:
                 token = auth_header
 
         if not token or len(token) != 64:
-            return jsonify({'success': False, 'message': 'Invalid or missing token'}), 401
+            return jsonify({"success": False, "message": "Invalid token"}), 401
 
         return f(*args, **kwargs)
+
     return decorated
 
-# === Helpers ===
+
+# =========================
+# Helper
+# =========================
 def get_user_by_email(email):
+
+    if users_collection is None:
+        return None
+
     return users_collection.find_one({"email": email})
 
-# === Auth Routes ===
-@app.route('/api/signup', methods=['POST'])
+
+# =========================
+# Signup
+# =========================
+@app.route("/api/signup", methods=["POST"])
 def signup():
-    try:
-        data = request.get_json(silent=True) or {}
-        name = data.get('name', '').strip()
-        phone = data.get('phone', '').strip()
-        email = data.get('email', '').strip().lower()
-        password = data.get('password', '').strip()
 
-        if not name or not phone or not email or not password:
-            return jsonify({'success': False, 'message': 'All fields are required'}), 400
-        if get_user_by_email(email):
-            return jsonify({'success': False, 'message': 'Email already registered'}), 409
+    if users_collection is None:
+        return jsonify({"success": False, "message": "Database not configured"}), 500
 
-        password_hash = generate_password_hash(password)
-        user_data = {
-            "name": name,
-            "phone": phone,
-            "email": email,
-            "password_hash": password_hash
-        }
-        users_collection.insert_one(user_data)
-        return jsonify({'success': True, 'message': 'Signup successful!'}), 201
-    except Exception as e:
-        print(f"❌ Signup Error: {str(e)}")
-        return jsonify({'success': False, 'message': 'Server error occurred'}), 500
+    data = request.get_json()
 
-@app.route('/api/login', methods=['POST'])
+    name = data.get("name")
+    phone = data.get("phone")
+    email = data.get("email")
+    password = data.get("password")
+
+    if get_user_by_email(email):
+        return jsonify({"success": False, "message": "Email already exists"}), 400
+
+    password_hash = generate_password_hash(password)
+
+    users_collection.insert_one({
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "password_hash": password_hash
+    })
+
+    return jsonify({"success": True, "message": "Signup successful"})
+
+
+# =========================
+# Login
+# =========================
+@app.route("/api/login", methods=["POST"])
 def login():
-    try:
-        data = request.get_json(silent=True) or {}
-        email = data.get('email', '').strip().lower()
-        password = data.get('password', '').strip()
-        user = get_user_by_email(email)
 
-        if user and check_password_hash(user['password_hash'], password):
-            token = secrets.token_hex(32)
-            return jsonify({'success': True, 'name': user['name'], 'token': token})
-        else:
-            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
-    except Exception as e:
-        print(f"❌ Login Error: {str(e)}")
-        return jsonify({'success': False, 'message': 'Server error occurred'}), 500
+    if users_collection is None:
+        return jsonify({"success": False, "message": "Database not configured"}), 500
 
-# === ML Utility ===
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    user = get_user_by_email(email)
+
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    if not check_password_hash(user["password_hash"], password):
+        return jsonify({"success": False, "message": "Invalid password"}), 401
+
+    token = secrets.token_hex(32)
+
+    return jsonify({
+        "success": True,
+        "name": user["name"],
+        "email": user["email"],
+        "token": token
+    })
+
+
+# =========================
+# Dataset Creator
+# =========================
 def create_dataset(dataset, time_step=60):
+
     X, y = [], []
+
     for i in range(len(dataset) - time_step):
         X.append(dataset[i:i + time_step, 0])
         y.append(dataset[i + time_step, 0])
+
     return np.array(X), np.array(y)
 
-# === Stock Prediction ===
-@app.route('/predict', methods=['POST'])
+
+# =========================
+# Stock Prediction
+# =========================
+@app.route("/predict", methods=["POST"])
 @token_required
 def predict():
-    try:
-        data = request.get_json(silent=True) or {}
-        company = data.get('company', '').strip().upper()
-        if not company:
-            return jsonify({'error': 'Company symbol is required'}), 400
 
-        end = datetime.datetime.now()
+    try:
+
+        data = request.get_json()
+
+        if not data or "company" not in data:
+            return jsonify({"error": "Company symbol required"}), 400
+
+        company = data.get("company").upper()
+
+        end = datetime.date.today()
         start = end - datetime.timedelta(days=1000)
 
-        df = web.DataReader(company, "tiingo", start, end, api_key=TIINGO_API_KEY)
-        if df.empty:
-            return jsonify({'error': 'No data found for the stock.'}), 404
+        url = f"https://api.tiingo.com/tiingo/daily/{company}/prices"
 
-        data_close = df[['close']]
-        scaler = MinMaxScaler(feature_range=(0, 1))
+        params = {
+            "startDate": start,
+            "endDate": end,
+            "token": TIINGO_API_KEY
+        }
+
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to fetch stock data"}), 500
+
+        stock_data = response.json()
+
+        if not stock_data:
+            return jsonify({"error": "No stock data found"}), 404
+
+        closes = [day["close"] for day in stock_data]
+
+        data_close = np.array(closes).reshape(-1, 1)
+
+        scaler = MinMaxScaler()
         scaled_data = scaler.fit_transform(data_close)
 
         time_step = 60
         X, y = create_dataset(scaled_data, time_step)
+
         X = X.reshape(X.shape[0], X.shape[1], 1)
 
         model = Sequential([
@@ -156,43 +227,51 @@ def predict():
             LSTM(50),
             Dense(1)
         ])
-        model.compile(optimizer='adam', loss='mean_squared_error')
+
+        model.compile(optimizer="adam", loss="mse")
+
         model.fit(X, y, epochs=5, batch_size=64, verbose=0)
 
         temp_input = list(scaled_data[-time_step:])
         forecast = []
-        for _ in range(30):
-            input_array = np.array(temp_input[-time_step:])
-            input_array = input_array.reshape(1, time_step, 1)
-            predicted = model.predict(input_array, verbose=0)
-            temp_input.append(predicted[0])
-            forecast.append(predicted[0])
 
-        forecast = scaler.inverse_transform(forecast).flatten().tolist()
+        for i in range(30):
 
-        os.makedirs('static', exist_ok=True)
-        plot_filename = f"forecast_plot_{uuid.uuid4().hex}.png"
-        plot_path = os.path.join('static', plot_filename)
+            x_input = np.array(temp_input[-time_step:]).reshape(1, time_step, 1)
+
+            pred = model.predict(x_input, verbose=0)
+
+            temp_input.append(pred[0])
+
+            forecast.append(pred[0])
+
+        forecast = scaler.inverse_transform(forecast).flatten()
+
+        os.makedirs("static", exist_ok=True)
+
+        filename = f"forecast_{uuid.uuid4().hex}.png"
+        path = os.path.join("static", filename)
 
         plt.figure(figsize=(10, 4))
-        plt.plot(forecast, label=f'{company} Forecast')
-        plt.title(f'{company} - 30 Day Forecast')
-        plt.xlabel('Day')
-        plt.ylabel('Predicted Price')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(plot_path)
+        plt.plot(forecast)
+        plt.title(f"{company} Forecast")
+        plt.savefig(path)
         plt.close()
 
         return jsonify({
-            'forecast': [round(price, 2) for price in forecast],
-            'forecast_plot': plot_path
+            "forecast": [round(float(x), 2) for x in forecast],
+            "forecast_plot": path
         })
 
     except Exception as e:
-        print(f"❌ Prediction Error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
-# === Run App ===
-if __name__ == '__main__':
-    app.run(port=5001)
+        print("Prediction Error:", str(e))
+
+        return jsonify({"error": str(e)}), 500
+
+
+# =========================
+# Run Server
+# =========================
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001, debug=True)
